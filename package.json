@@ -1,11 +1,8 @@
 {
   "name": "fasterdash",
   "version": "0.0.1",
-  "description": "Lodash replacement for large data sets. Implemted in Rust.",
+  "description": "Lodash replacement for large data sets. Implemted in Rust",
   "main": "index.js",
-  "scripts": {
-    "test": "npm test"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fasterdash/fasterdash.git"
@@ -20,5 +17,18 @@
   "bugs": {
     "url": "https://github.com/fasterdash/fasterdash/issues"
   },
-  "homepage": "https://github.com/fasterdash/fasterdash#readme"
+  "homepage": "https://github.com/fasterdash/fasterdash#readme",
+  "scripts": {
+    "test": "npm test",
+    "build": "webpack",
+    "serve": "webpack serve"
+  },
+  "devDependencies": {
+    "@wasm-tool/wasm-pack-plugin": "1.5.0",
+    "html-webpack-plugin": "^5.3.2",
+    "text-encoding": "^0.7.0",
+    "webpack": "^5.49.0",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^4.15.1"
+  }
 }
