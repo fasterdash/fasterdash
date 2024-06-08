@@ -1,10 +1,9 @@
 import Benchmark from 'benchmark';
 import fs from 'fs';
 import _ from 'lodash';
+import fasterdash from '../lib/index.js';
 import htmlToImage from 'node-html-to-image';
 
-// Extract the lodash orderBy function
-const lodashOrderBy = _.orderBy;
 const suite = new Benchmark.Suite;
 
 // Example data generation function
@@ -23,7 +22,11 @@ let results = [];
 sizes.forEach(size => {
   suite.add(`Lodash orderBy ${size}`, () => {
     const data = generateData(size);
-    lodashOrderBy(data, ['value']);
+    _.orderBy(data, ['value']);
+  });
+  suite.add(`Fasterdash orderBy ${size}`, () => {
+    const data = generateData(size);
+    fasterdash.orderBy(data, ['value']);
   });
 });
 
@@ -55,25 +58,41 @@ suite.run({ 'async': true });
 
 // Function to generate a graph from the benchmark results and save it as a PNG image
 async function generateGraph(data) {
-  // Create a trace for Plotly
-  const trace = {
-    x: data.map(d => d.size), // Array sizes
-    y: data.map(d => d.totalTime), // Total time for each array size
+  // Separate data for lodash and fasterdash
+  const lodashData = data.filter(d => d.name.includes('Lodash'));
+  const fasterdashData = data.filter(d => d.name.includes('Fasterdash'));
+
+  // Create traces for Plotly
+  const lodashTrace = {
+    x: lodashData.map(d => d.size), // Array sizes
+    y: lodashData.map(d => d.totalTime), // Total time for each array size
     type: 'scatter',
     mode: 'lines+markers',    // Line graph with markers at each data point
+    name: 'Lodash orderBy',   // Legend name
     marker: { color: 'blue' },
-    text: data.map(d => d.name), // Add test names as hover text
+    text: lodashData.map(d => d.name), // Add test names as hover text
     hoverinfo: 'x+y+text'    // Show size, total time, and test name on hover
+  };
+
+  const fasterdashTrace = {
+    x: fasterdashData.map(d => d.size),
+    y: fasterdashData.map(d => d.totalTime),
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: 'Fasterdash orderBy',
+    marker: { color: 'red' },
+    text: fasterdashData.map(d => d.name),
+    hoverinfo: 'x+y+text'
   };
 
   // Layout for the Plotly graph
   const layout = {
-    title: 'Total Time of lodash orderBy across different array sizes',
+    title: 'Total Time of lodash orderBy vs fasterdash orderBy across different array sizes',
     xaxis: {
       title: 'Array Size',
-      type: 'linear', // Logarithmic scale for the x-axis
-      tickvals: data.map(d => d.size), // Explicit tick values for each array size
-      ticktext: data.map(d => `${d.size}`) // Text labels for the tick values
+      type: 'linear', // Linear scale for the x-axis
+      tickvals: lodashData.map(d => d.size), // Explicit tick values for each array size
+      ticktext: lodashData.map(d => `${d.size}`) // Text labels for the tick values
     },
     yaxis: {
       title: 'Total Time (seconds)',
@@ -88,7 +107,7 @@ async function generateGraph(data) {
                 <body><div id="myDiv" style="width: 800px; height: 600px;"></div>
                 <script>
                   var graphDiv = document.getElementById('myDiv');
-                  Plotly.newPlot(graphDiv, [${JSON.stringify(trace)}], ${JSON.stringify(layout)});
+                  Plotly.newPlot(graphDiv, [${JSON.stringify(lodashTrace)}, ${JSON.stringify(fasterdashTrace)}], ${JSON.stringify(layout)});
                 </script></body></html>`;
 
   // Convert the HTML to an image using node-html-to-image and save it
