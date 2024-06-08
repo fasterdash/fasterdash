@@ -40,7 +40,7 @@ module.exports = {
             // forceMode: "development",
             // // Controls plugin output verbosity, either 'info' or 'error'.
             // // Defaults to 'info'.
-            // pluginLogLevel: 'info'
+            pluginLogLevel: 'verbose'
         }),
         // Have this example work in Edge which doesn't ship `TextEncoder` or
         // `TextDecoder` at this time.
