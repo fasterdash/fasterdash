@@ -15,6 +15,7 @@ extern "C" {
 #[derive(Serialize, Deserialize, Debug)]
 enum Iteratee {
     Path(Vec<String>),
+    Property(String),
 }
 
 impl Iteratee {
@@ -23,6 +24,10 @@ impl Iteratee {
             Iteratee::Path(path) => {
                 let path_clone = path.clone();
                 Box::new(move |value| base_get(value, &path_clone.iter().map(String::as_str).collect::<Vec<&str>>()))
+            }
+            Iteratee::Property(property) => {
+                let property_clone = property.clone();
+                Box::new(move |value| value[&property_clone].clone())
             }
         }
     }
@@ -119,14 +124,23 @@ pub fn order_by(
     wasm_logger::init(wasm_logger::Config::default());
 
     let collection: Value = from_value(collection.clone()).unwrap_or_else(|_| Value::Null);
-    let iteratees: Vec<Iteratee> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![Iteratee::Path(vec!["age".to_string()])]); // default iteratee
-    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string()]); // default order
+    let iteratees: Vec<String> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![]);
+    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec![]);
 
     info!("Collection: {:?}", collection);
-    info!("Iteratees: {:?}", iteratees);
+    info!("Raw Iteratees: {:?}", iteratees);
     info!("Orders: {:?}", orders);
 
-    let mut iteratee_fns: Vec<IterateeFn> = iteratees.into_iter().map(|iter| iter.to_fn()).collect();
+    // Convert iteratees from strings to Iteratee enums
+    let iteratees: Vec<Iteratee> = iteratees.into_iter().map(|s| Iteratee::Property(s)).collect();
+
+    info!("Converted Iteratees: {:?}", iteratees);
+
+    let mut iteratee_fns: Vec<IterateeFn> = iteratees.iter().map(|iter| {
+        let func = iter.to_fn();
+        info!("Created iteratee function for: {:?}", iter);
+        func
+    }).collect();
 
     if iteratee_fns.is_empty() {
         iteratee_fns.push(Box::new(identity));
