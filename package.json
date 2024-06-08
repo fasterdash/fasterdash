@@ -21,7 +21,7 @@
   "scripts": {
     "test": "npm test",
     "build": "webpack",
-    "serve": "webpack serve"
+    "serve": "open http://localhost:8080/; webpack serve"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.5.0",
