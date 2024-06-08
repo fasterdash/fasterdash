@@ -1,10 +1,13 @@
-# Hello, World!
+# Fasterdash
 
-[View documentation for this example online][dox] or [View compiled example
-online][compiled]
+Fasterdash is a drop in replacement for Lodash using Rust and WebAssembly
 
-[compiled]: https://rustwasm.github.io/wasm-bindgen/exbuild/hello_world/
-[dox]: https://rustwasm.github.io/docs/wasm-bindgen/examples/hello-world.html
+## Functions Implemented and Benchmark Results
+
+## Benchmark Results
+
+* orderBy
+![orderBy Benchmark Results](./benchmark/results/orderBy.png)
 
 ## Prerequisites
 
@@ -47,9 +50,5 @@ npm run test
 
 ```bash
 npm run benchmark
-# Automatically opens ./benchmark/output.png
+# Files will be created at ./benchmark/results/*.png
 ```
-
-## Benchmark Results
-
-![Benchmark Results](./benchmark/output.png)

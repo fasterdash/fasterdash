@@ -6,7 +6,7 @@ import htmlToImage from 'node-html-to-image';
 
 const suite = new Benchmark.Suite;
 
-const imageOutputPath = './benchmark/output.png'
+const imageOutputPath = './benchmark/results/orderBy.png'
 
 // Example data generation function
 const generateData = (size) => {
