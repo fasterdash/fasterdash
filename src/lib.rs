@@ -4,13 +4,15 @@ use serde_json::{self, Value};
 use serde_wasm_bindgen::{from_value, to_value};
 use serde::{Deserialize, Serialize};
 use console_error_panic_hook;
+use log::info;
+use wasm_logger;
 
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 enum Iteratee {
     Path(Vec<String>),
 }
@@ -68,17 +70,31 @@ fn compare_multiple(
 
 fn compare_values(a: &Value, b: &Value) -> Ordering {
     match (a, b) {
-        (Value::Number(a), Value::Number(b)) => a.as_f64().partial_cmp(&b.as_f64()).unwrap_or(Ordering::Equal),
-        (Value::String(a), Value::String(b)) => a.cmp(b),
-        (Value::Bool(a), Value::Bool(b)) => a.cmp(b),
-        _ => Ordering::Equal,
+        (Value::Number(a), Value::Number(b)) => {
+            let a = a.as_f64().unwrap_or(0.0);
+            let b = b.as_f64().unwrap_or(0.0);
+            info!("Comparing numbers: {} and {}", a, b);
+            a.partial_cmp(&b).unwrap_or(Ordering::Equal)
+        }
+        (Value::String(a), Value::String(b)) => {
+            info!("Comparing strings: {} and {}", a, b);
+            a.cmp(b)
+        }
+        (Value::Bool(a), Value::Bool(b)) => {
+            info!("Comparing bools: {} and {}", a, b);
+            a.cmp(b)
+        }
+        _ => {
+            info!("Comparing others: {:?} and {:?}", a, b);
+            Ordering::Equal
+        }
     }
 }
 
 // Types and struct definitions
 type IterateeFn = Box<dyn Fn(&Value) -> Value>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct CriteriaObject {
     criteria: Vec<Value>,
     index: usize,
@@ -99,13 +115,16 @@ pub fn order_by(
     iteratees: &JsValue,
     orders: &JsValue,
 ) -> JsValue {
-    // Ensure panic hook is set
     console_error_panic_hook::set_once();
+    wasm_logger::init(wasm_logger::Config::default());
 
-    // Handle potential errors in data conversion
     let collection: Value = from_value(collection.clone()).unwrap_or_else(|_| Value::Null);
-    let iteratees: Vec<Iteratee> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![]);
-    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec![]);
+    let iteratees: Vec<Iteratee> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![Iteratee::Path(vec!["age".to_string()])]); // default iteratee
+    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string()]); // default order
+
+    info!("Collection: {:?}", collection);
+    info!("Iteratees: {:?}", iteratees);
+    info!("Orders: {:?}", orders);
 
     let mut iteratee_fns: Vec<IterateeFn> = iteratees.into_iter().map(|iter| iter.to_fn()).collect();
 
@@ -113,7 +132,7 @@ pub fn order_by(
         iteratee_fns.push(Box::new(identity));
     }
 
-    let mut criteria_index = -1;
+    let mut criteria_index: isize = -1;
     let mut each_index = -1;
 
     let mut result = if is_array_like(&collection) {
@@ -129,6 +148,8 @@ pub fn order_by(
             criteria_index += 1;
             each_index += 1;
 
+            info!("Criteria for value {:?}: {:?}", value, criteria);
+
             result.push(CriteriaObject {
                 criteria,
                 index: criteria_index as usize,
@@ -137,44 +158,11 @@ pub fn order_by(
         });
     }
 
+    info!("Result before sorting: {:?}", result);
+
     let sorted_result = base_sort_by(result, |a, b| compare_multiple(a, b, &orders.iter().map(String::as_str).collect::<Vec<_>>()));
 
+    info!("Result after sorting: {:?}", sorted_result);
+
     to_value(&sorted_result.into_iter().map(|object| object.value).collect::<Vec<_>>()).unwrap()
-}
-
-fn test_sort() -> (JsValue, JsValue) {
-    let collection = serde_json::json!([
-        {"name": "John", "age": 30},
-        {"name": "Jane", "age": 25},
-        {"name": "Doe", "age": 50}
-    ]);
-
-    let iteratees: Vec<Iteratee> = vec![
-        Iteratee::Path(vec!["name".to_string()])
-    ];
-    let orders = vec![
-        "asc".to_string()
-    ];
-
-    let collection_value = to_value(&collection).unwrap();
-    let iteratees_value = to_value(&iteratees).unwrap();
-    let orders_value = to_value(&orders).unwrap();
-
-    let sorted = order_by(
-        &collection_value,
-        &iteratees_value,
-        &orders_value
-    );
-
-    (collection_value, sorted)
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    let (unsorted, sorted) = test_sort();
-    let unsorted_value: Value = serde_wasm_bindgen::from_value(unsorted).unwrap_or_else(|_| Value::String("Error serializing result".to_string()));
-    let sorted_value: Value = serde_wasm_bindgen::from_value(sorted).unwrap_or_else(|_| Value::String("Error serializing result".to_string()));
-    let unsorted_string = serde_json::to_string(&unsorted_value).unwrap_or_else(|_| "Error serializing result".to_string());
-    let sorted_string = serde_json::to_string(&sorted_value).unwrap_or_else(|_| "Error serializing result".to_string());
-    alert(&format!("Unsorted: {}\nSorted: {}", unsorted_string, sorted_string));
 }
