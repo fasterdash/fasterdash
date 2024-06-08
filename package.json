@@ -1,0 +1,24 @@
+{
+  "name": "fasterdash",
+  "version": "0.0.1",
+  "description": "Lodash replacement for large data sets. Implemted in Rust.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fasterdash/fasterdash.git"
+  },
+  "keywords": [
+    "Lodash",
+    "Rust",
+    "OrderBy"
+  ],
+  "author": "Michael Trevino and Ross Miller",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fasterdash/fasterdash/issues"
+  },
+  "homepage": "https://github.com/fasterdash/fasterdash#readme"
+}
