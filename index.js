@@ -1,2 +1,2 @@
-import { orderBy, greet } from './pkg';
-greet(orderBy([3, 1, 2], 'asc'));
+import { greet } from './pkg/index.js';
+greet();
