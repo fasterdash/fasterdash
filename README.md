@@ -8,8 +8,32 @@ online][compiled]
 
 ## Build
 
-```
-$ npm run serve
+```bash
+npm run serve
 ```
 
-and then visiting http://localhost:8080 in a browser should run the example!
+## Serve
+
+```bash
+npm run serve
+# Automatically opens http://localhost:8080. You may need to reload the browser after rust finishes building
+```
+
+## Clean
+
+```bash
+npm run clean
+```
+
+## Test
+
+```bash
+npm run test
+```
+
+## Benchmark
+
+```bash
+npm run benchmark
+# Automatically opens ./benchmark/output.png
+```

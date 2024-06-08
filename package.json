@@ -20,11 +20,11 @@
   },
   "homepage": "https://github.com/fasterdash/fasterdash#readme",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "benchmark": "node ./benchmark/index.js",
-    "clean": "rimraf target pkg",
     "build": "webpack",
-    "serve": "open http://localhost:8080/; webpack serve"
+    "serve": "open http://localhost:8080/; webpack serve",
+    "clean": "rimraf target pkg",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "benchmark": "node ./benchmark/index.js && open ./benchmark/output.png"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.5.0",

@@ -6,6 +6,8 @@ import htmlToImage from 'node-html-to-image';
 
 const suite = new Benchmark.Suite;
 
+const imageOutputPath = './benchmark/output.png'
+
 // Example data generation function
 const generateData = (size) => {
   return Array.from({ length: size }, (_, i) => ({
@@ -50,7 +52,7 @@ suite.on('cycle', (event) => {
 suite.on('complete', async function() {
   console.log('All benchmarks completed.');
   await generateGraph(results);
-  console.log('Graph image has been saved.');
+  console.log(`Graph image has been saved to ${imageOutputPath}`);
 });
 
 // Run the benchmark suite asynchronously
@@ -112,7 +114,7 @@ async function generateGraph(data) {
 
   // Convert the HTML to an image using node-html-to-image and save it
   await htmlToImage({
-    output: './benchmark/output.png',
+    output: imageOutputPath,
     html: html,
     puppeteerArgs: { args: ['--no-sandbox'] },
   });
