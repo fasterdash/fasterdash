@@ -4,7 +4,6 @@ use serde_json::{self, Value};
 use serde_wasm_bindgen::{from_value, to_value};
 use serde::{Deserialize, Serialize};
 use console_error_panic_hook;
-use log::info;
 use wasm_logger;
 
 #[wasm_bindgen]
@@ -78,19 +77,15 @@ fn compare_values(a: &Value, b: &Value) -> Ordering {
         (Value::Number(a), Value::Number(b)) => {
             let a = a.as_f64().unwrap_or(0.0);
             let b = b.as_f64().unwrap_or(0.0);
-            info!("Comparing numbers: {} and {}", a, b);
             a.partial_cmp(&b).unwrap_or(Ordering::Equal)
         }
         (Value::String(a), Value::String(b)) => {
-            info!("Comparing strings: {} and {}", a, b);
             a.cmp(b)
         }
         (Value::Bool(a), Value::Bool(b)) => {
-            info!("Comparing bools: {} and {}", a, b);
             a.cmp(b)
         }
         _ => {
-            info!("Comparing others: {:?} and {:?}", a, b);
             Ordering::Equal
         }
     }
@@ -125,20 +120,14 @@ pub fn order_by(
 
     let collection: Value = from_value(collection.clone()).unwrap_or_else(|_| Value::Null);
     let iteratees: Vec<String> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![]);
-    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec![]);
-
-    info!("Collection: {:?}", collection);
-    info!("Raw Iteratees: {:?}", iteratees);
-    info!("Orders: {:?}", orders);
+    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string(); iteratees.len()]).into_iter().map(String::from).collect();
 
     // Convert iteratees from strings to Iteratee enums
     let iteratees: Vec<Iteratee> = iteratees.into_iter().map(|s| Iteratee::Property(s)).collect();
 
-    info!("Converted Iteratees: {:?}", iteratees);
 
     let mut iteratee_fns: Vec<IterateeFn> = iteratees.iter().map(|iter| {
         let func = iter.to_fn();
-        info!("Created iteratee function for: {:?}", iter);
         func
     }).collect();
 
@@ -161,9 +150,6 @@ pub fn order_by(
 
             criteria_index += 1;
             each_index += 1;
-
-            info!("Criteria for value {:?}: {:?}", value, criteria);
-
             result.push(CriteriaObject {
                 criteria,
                 index: criteria_index as usize,
@@ -172,11 +158,7 @@ pub fn order_by(
         });
     }
 
-    info!("Result before sorting: {:?}", result);
-
     let sorted_result = base_sort_by(result, |a, b| compare_multiple(a, b, &orders.iter().map(String::as_str).collect::<Vec<_>>()));
-
-    info!("Result after sorting: {:?}", sorted_result);
 
     to_value(&sorted_result.into_iter().map(|object| object.value).collect::<Vec<_>>()).unwrap()
 }
