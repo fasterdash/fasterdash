@@ -1,3 +1,3 @@
-import { greet } from './pkg';
+import { orderBy, greet } from './pkg';
 
-greet('World');
+greet(orderBy([3, 1, 2], 'asc'));
