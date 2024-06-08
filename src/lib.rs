@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use serde_json::{self, Value};
 use serde_wasm_bindgen::{from_value, to_value};
 use serde::{Deserialize, Serialize};
+use console_error_panic_hook;
 
 #[wasm_bindgen]
 extern "C" {
@@ -98,9 +99,13 @@ pub fn order_by(
     iteratees: &JsValue,
     orders: &JsValue,
 ) -> JsValue {
-    let collection: Value = from_value(collection.clone()).unwrap();
-    let iteratees: Vec<Iteratee> = from_value(iteratees.clone()).unwrap();
-    let orders: Vec<String> = from_value(orders.clone()).unwrap();
+    // Ensure panic hook is set
+    console_error_panic_hook::set_once();
+
+    // Handle potential errors in data conversion
+    let collection: Value = from_value(collection.clone()).unwrap_or_else(|_| Value::Null);
+    let iteratees: Vec<Iteratee> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![]);
+    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec![]);
 
     let mut iteratee_fns: Vec<IterateeFn> = iteratees.into_iter().map(|iter| iter.to_fn()).collect();
 
@@ -117,18 +122,20 @@ pub fn order_by(
         Vec::new()
     };
 
-    base_each(collection.as_array().unwrap(), |value| {
-        let criteria: Vec<Value> = iteratee_fns.iter().map(|iteratee| iteratee(value)).collect();
+    if let Some(array) = collection.as_array() {
+        base_each(array, |value| {
+            let criteria: Vec<Value> = iteratee_fns.iter().map(|iteratee| iteratee(value)).collect();
 
-        criteria_index += 1;
-        each_index += 1;
+            criteria_index += 1;
+            each_index += 1;
 
-        result.push(CriteriaObject {
-            criteria,
-            index: criteria_index as usize,
-            value: value.clone(),
+            result.push(CriteriaObject {
+                criteria,
+                index: criteria_index as usize,
+                value: value.clone(),
+            });
         });
-    });
+    }
 
     let sorted_result = base_sort_by(result, |a, b| compare_multiple(a, b, &orders.iter().map(String::as_str).collect::<Vec<_>>()));
 
