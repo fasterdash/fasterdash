@@ -12,9 +12,15 @@ let users = [
 // Sort by `patron` in ascending order
 // and by `age` in descending order
 
-let sortByAge = fasterdash.orderBy(users, ['patron', 'age'], ['asc', 'desc']);
-let sortByName = fasterdash.orderBy(users, ['patron', 'age'], ['asc', 'desc']);
+let sortByAgeAsc = fasterdash.orderBy(users, ['age'], ['asc']);
+let sortByAgeDesc = fasterdash.orderBy(users, ['age'], ['desc']);
+let sortByNameAsc = fasterdash.orderBy(users, ['patron'], ['asc']);
+let sortByNameDesc = fasterdash.orderBy(users, ['patron'], ['desc']);
+let sortByNameAscAgeDesc = fasterdash.orderBy(users, ['patron', 'age'], ['asc', 'desc']);
 
 // Printing the output
-console.log(sortByAge);
-console.log(sortByName);
+console.log({sortByAgeAsc});
+console.log({sortByAgeDesc});
+console.log({sortByNameAsc});
+console.log({sortByNameDesc});
+console.log({sortByNameAscAgeDesc});
