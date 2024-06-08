@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "@babel/preset-env": "^7.24.7",
-    "express": "^4.19.2",
     "plotly.js-basic-dist": "^2.33.0"
   }
 }
