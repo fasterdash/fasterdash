@@ -6,7 +6,7 @@ online][compiled]
 [compiled]: https://rustwasm.github.io/wasm-bindgen/exbuild/hello_world/
 [dox]: https://rustwasm.github.io/docs/wasm-bindgen/examples/hello-world.html
 
-You can build the example locally with:
+## Build
 
 ```
 $ npm run serve
