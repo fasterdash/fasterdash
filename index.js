@@ -1,3 +1,3 @@
-import { greet } from './pkg';
+import { greet, sort } from './pkg';
 
 greet('World');
