@@ -1,4 +1,4 @@
-import { base_order_by } from './pkg/index.js';
+import { order_by } from './pkg/index.js';
 
 const objToSort = [
   {"name": "John", "age": 30},
@@ -8,8 +8,8 @@ const objToSort = [
 
 console.log(objToSort);
 
-const sortByName = base_order_by(objToSort, "name");
-const sortByAge = base_order_by(objToSort, "age");
+const sortByName = order_by(objToSort, "name");
+const sortByAge = order_by(objToSort, "age");
 
 console.log({sortByName});
 console.log({sortByAge});

@@ -93,7 +93,7 @@ fn identity(value: &Value) -> Value {
 }
 
 #[wasm_bindgen]
-pub fn base_order_by(
+pub fn order_by(
     collection: &JsValue,
     iteratees: &JsValue,
     orders: &JsValue,
@@ -153,7 +153,7 @@ fn test_sort() -> (JsValue, JsValue) {
     let iteratees_value = to_value(&iteratees).unwrap();
     let orders_value = to_value(&orders).unwrap();
 
-    let sorted = base_order_by(
+    let sorted = order_by(
         &collection_value,
         &iteratees_value,
         &orders_value
