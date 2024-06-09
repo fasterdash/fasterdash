@@ -39,10 +39,10 @@ module.exports = {
             // //
             // // the mode `development` makes `wasm-pack` build in `debug` mode.
             // // the mode `production` makes `wasm-pack` build in `release` mode.
-            // forceMode: "development",
+            forceMode: "production",
             // // Controls plugin output verbosity, either 'info' or 'error'.
             // // Defaults to 'info'.
-            pluginLogLevel: 'verbose'
+            // pluginLogLevel: 'verbose'
         }),
         // Have this example work in Edge which doesn't ship `TextEncoder` or
         // `TextDecoder` at this time.
