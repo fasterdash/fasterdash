@@ -13,6 +13,9 @@
     "Rust",
     "OrderBy"
   ],
+  "contributors": [
+
+  ],
   "author": "Michael Trevino and Ross Miller",
   "license": "MIT",
   "bugs": {
@@ -24,7 +27,7 @@
     "serve": "open http://localhost:8080/; webpack serve",
     "clean": "rimraf target pkg",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "benchmark": "node ./benchmark/index.js"
+    "benchmark": "node --experimental-modules ./benchmark/index.mjs"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.5.0",

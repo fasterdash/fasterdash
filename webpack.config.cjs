@@ -16,7 +16,9 @@ module.exports = {
             // Optional space delimited arguments to appear before the wasm-pack
             // command. Default arguments are `--verbose`.
             // args: '--log-level warn',
+            extraArgs: '--target nodejs',
             // // Default arguments are `--typescript --target browser --mode normal`.
+            // extraArgs: "--target web",
             // extraArgs: '--no-typescript',
             // Optional array of absolute paths to directories, changes to which
             // will trigger the build.

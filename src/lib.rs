@@ -109,25 +109,32 @@ fn identity(value: &Value) -> Value {
     value.clone()
 }
 
+pub fn initialize() {
+    console_error_panic_hook::set_once();
+    wasm_logger::init(wasm_logger::Config::default());
+}
+
 #[wasm_bindgen]
 pub fn order_by(
     collection: &JsValue,
     iteratees: &JsValue,
     orders: &JsValue,
 ) -> JsValue {
-    console_error_panic_hook::set_once();
-    wasm_logger::init(wasm_logger::Config::default());
-
     let collection: Value = from_value(collection.clone()).unwrap_or_else(|_| Value::Null);
     let iteratees: Vec<String> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![]);
-    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string(); iteratees.len()]).into_iter().map(String::from).collect();
+    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string();
+
+    // info!("Collection: {:?}", collection);
+    // info!("Raw Iteratees: {:?}", iteratees);
+    // info!("Orders: {:?}", orders);
 
     // Convert iteratees from strings to Iteratee enums
     let iteratees: Vec<Iteratee> = iteratees.into_iter().map(|s| Iteratee::Property(s)).collect();
 
-
     let mut iteratee_fns: Vec<IterateeFn> = iteratees.iter().map(|iter| {
         let func = iter.to_fn();
+
+        // info!("Created iteratee function for: {:?}", iter);
         func
     }).collect();
 
@@ -150,6 +157,9 @@ pub fn order_by(
 
             criteria_index += 1;
             each_index += 1;
+
+            // info!("Criteria for value {:?}: {:?}", value, criteria);
+
             result.push(CriteriaObject {
                 criteria,
                 index: criteria_index as usize,
@@ -158,7 +168,11 @@ pub fn order_by(
         });
     }
 
+    // info!("Result before sorting: {:?}", result);
+
     let sorted_result = base_sort_by(result, |a, b| compare_multiple(a, b, &orders.iter().map(String::as_str).collect::<Vec<_>>()));
+
+    // info!("Result after sorting: {:?}", sorted_result);
 
     to_value(&sorted_result.into_iter().map(|object| object.value).collect::<Vec<_>>()).unwrap()
 }

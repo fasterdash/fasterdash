@@ -12,6 +12,7 @@ let users = [
 // Sort by `patron` in ascending order
 // and by `age` in descending order
 
+fasterdash.initialize();
 let sortByAgeAsc = fasterdash.orderBy(users, ['age'], ['asc']);
 let sortByAgeAscWithDefault = fasterdash.orderBy(users, ['age']);
 let sortByAgeDesc = fasterdash.orderBy(users, ['age'], ['desc']);
