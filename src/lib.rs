@@ -180,5 +180,5 @@ pub fn order_by(
 
 #[wasm_bindgen]
 pub fn compact(arr: Vec<i32>) -> Vec<i32> {
-    arr.into_iter().collect()
+    arr.into_iter().filter(|&x| x != 0).collect()
 }
