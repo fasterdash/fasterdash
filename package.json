@@ -28,9 +28,14 @@
     "clean": "rimraf target pkg",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "//": "********* BENCHMARKS *********",
-    "benchmark:all": "npm run benchmark:orderBy && npm run benchmark:compact",
+    "benchmark:all": "npm run benchmark:orderBy && npm run benchmark:compact && npm run benchmark:cloneDeep && npm run benchmark:groupBy && npm run benchmark:flattenDeep && npm run benchmark:uniq",
     "benchmark:orderBy": "node --experimental-modules ./benchmark/index.mjs orderBy",
-    "benchmark:compact": "node --experimental-modules ./benchmark/index.mjs compact"
+    "benchmark:compact": "node --experimental-modules ./benchmark/index.mjs compact",
+    "benchmark:cloneDeep": "node --experimental-modules ./benchmark/index.mjs cloneDeep",
+    "benchmark:merge": "node --experimental-modules ./benchmark/index.mjs merge",
+    "benchmark:groupBy": "node --experimental-modules ./benchmark/index.mjs groupBy",
+    "benchmark:flattenDeep": "node --experimental-modules ./benchmark/index.mjs flattenDeep",
+    "benchmark:uniq": "node --experimental-modules ./benchmark/index.mjs uniq"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.5.0",

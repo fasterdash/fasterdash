@@ -5,9 +5,8 @@ import fasterdash from '../lib/index.js';
 import htmlToImage from 'node-html-to-image';
 import process from 'process';
 
-// Common data generation function
 const generateData = (size, mode) => {
-  switch(mode) {
+  switch (mode) {
     case 'orderBy':
       return [
         Array.from({ length: size }, (_, i) => ({
@@ -24,44 +23,102 @@ const generateData = (size, mode) => {
       return [
         Array.from({ length: size }, (_, i) => (i % 10 === 0 ? 0 : i))
       ];
+    case 'cloneDeep':
+      return [
+        Array.from({ length: size }, (_, i) => ({
+          id: i,
+          nested: {
+            level1: {
+              level2: {
+                value: Math.random()
+              }
+            }
+          }
+        }))
+      ];
+    case 'merge':
+      return [
+        Array.from({ length: size }, (_, i) => ({ id: i, value: Math.random() })),
+        Array.from({ length: size }, (_, i) => ({ id: i, otherValue: Math.random() }))
+      ];
+      case 'groupBy':
+      return [
+        Array.from({ length: size }, (_, i) => ({
+          type: i % 2 === 0 ? 'even' : 'odd',
+          category: i % 3 === 0 ? 'A' : (i % 3 === 1 ? 'B' : 'C'),
+          details: {
+            value: i,
+            nested: {
+              level: i % 5,
+              items: Array.from({ length: (i % 5) + 1 }, (_, j) => ({
+                id: j,
+                value: Math.random()
+              }))
+            }
+          },
+          timestamp: Date.now() + i
+        })),
+        'type'
+      ];    
+    case 'flattenDeep': {
+      const nestedArray = (depth) => {
+        if (depth <= 0) return depth;
+        return [depth, nestedArray(depth - 1)];
+      };
+      return [nestedArray(size)];
+    }
+    case 'uniq':
+      return [
+        Array.from({ length: size }, () => Math.floor(Math.random() * 10))
+      ];
     default:
       return null; // Invalid command
   }
 };
 
 // Generic benchmark function to reduce code duplication
-// E.g. operation could be 'orderBy' or 'compact'
 function benchmarkOperation(operation) {
   console.log(`Benchmarking ${operation}`);
 
-  const suite = new Benchmark.Suite;
   const sizes = [1000, 10000, 100000];
   let results = [];
 
   sizes.forEach(size => {
+    const suite = new Benchmark.Suite;
     const [...args] = generateData(size, operation);
-    suite.add(`Lodash ${operation} ${size}`, () => {
-      _[operation](...args);
+
+    // console.log(`Generated data for size ${size}:`, args);
+
+    suite.add(`Lodash ${operation} ${size}`, {
+      defer: true,
+      fn: async (deferred) => {
+        await _[operation](...args);
+        deferred.resolve();
+      }
     });
-    suite.add(`Fasterdash ${operation} ${size}`, () => {
-      fasterdash[operation](...args);
+    suite.add(`Fasterdash ${operation} ${size}`, {
+      defer: true,
+      fn: async (deferred) => {
+        await fasterdash[operation](...args);
+        deferred.resolve();
+      }
     });
-  });
 
-  suite.on('cycle', (event) => {
-    console.log(String(event.target));
-    const size = parseInt(event.target.name.split(' ')[2]);
-    const totalTime = event.target.stats.mean * event.target.stats.sample.length;
-    results.push({ name: event.target.name, totalTime, size });
-    console.log(`Total execution time for ${size} elements: ${totalTime.toFixed(3)} seconds`);
-  });
+    suite.on('cycle', (event) => {
+      console.log(String(event.target));
+      const size = parseInt(event.target.name.split(' ')[2]);
+      const totalTime = event.target.stats.mean * event.target.stats.sample.length;
+      results.push({ name: event.target.name, totalTime, size });
+      console.log(`Total execution time for ${size} elements: ${totalTime.toFixed(3)} seconds`);
+    });
 
-  suite.on('complete', async () => {
-    console.log('All benchmarks completed.');
-    await generateGraph(results, operation);
-  });
+    suite.on('complete', async () => {
+      console.log(`All '${operation}' benchmarks completed.`);
+      await generateGraph(results, operation);
+    });
 
-  suite.run({ 'async': true });
+    suite.run({ 'async': true });
+  });
 }
 
 // Function to generate and save a graph
@@ -72,16 +129,22 @@ async function generateGraph(data, operation) {
     return acc;
   }, { 'Lodash': [], 'Fasterdash': [] });
 
-  const traces = Object.entries(traceData).map(([lib, values]) => ({
-    x: values.map(v => v.size),
-    y: values.map(v => v.totalTime),
-    type: 'scatter',
-    mode: 'lines+markers',
-    name: `${lib} ${operation}`,
-    marker: { color: lib === 'Lodash' ? 'blue' : 'red' },
-    text: values.map(v => v.name),
-    hoverinfo: 'x+y+text'
-  }));
+
+
+  const traces = Object.entries(traceData).map(([lib, values]) => {
+    const sortedValues = values.sort((a, b) => a.size - b.size);
+
+    return {
+      x: values.map(v => v.size),
+      y: values.map(v => v.totalTime),
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: `${lib} ${operation}`,
+      marker: { color: lib === 'Lodash' ? 'blue' : 'red' },
+      text: values.map(v => v.name),
+      hoverinfo: 'x+y+text'
+    }
+  });
 
   const layout = {
     title: `Total Time of Lodash vs Fasterdash ${operation} across different array sizes`,
@@ -106,9 +169,12 @@ async function generateGraph(data, operation) {
 }
 
 // Entry point function using command line arguments
-// E.g. args[0] could be 'orderBy' or 'compact'
 function main() {
   const args = process.argv.slice(2);
+  if (args.length === 0) {
+    console.error('Please provide an operation to benchmark.');
+    process.exit(1);
+  }
   benchmarkOperation(args[0]);
 }
 

@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use serde_json::{self, Value};
 use serde_wasm_bindgen::{from_value, to_value};
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use console_error_panic_hook;
 use wasm_logger;
 
@@ -181,4 +182,73 @@ pub fn order_by(
 #[wasm_bindgen]
 pub fn compact(arr: Vec<i32>) -> Vec<i32> {
     arr.into_iter().filter(|&x| x != 0).collect()
+    // TODO!: Should it do this instead?
+    // items.into_iter().filter_map(|item| item).collect()
+}
+
+#[wasm_bindgen]
+pub fn clone_deep(data: &JsValue) -> JsValue {
+    let data: Value = from_value(data.clone()).unwrap();
+    let cloned_data = data.clone();
+    to_value(&cloned_data).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn merge(map1: JsValue, map2: JsValue) -> JsValue {
+    let map1: HashMap<String, Value> = from_value(map1).unwrap();
+    let map2: HashMap<String, Value> = from_value(map2).unwrap();
+    let mut result = map1.clone();
+    for (key, value) in map2 {
+        result.insert(key, value);
+    }
+    to_value(&result).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn group_by(items: JsValue, key: &str) -> JsValue {
+    // Deserialize JsValue to Vec<Value>
+    let items: Vec<Value> = from_value(items).unwrap_or_else(|_| Vec::new());
+    let mut map: HashMap<String, Vec<Value>> = HashMap::new();
+
+    for item in items.into_iter() {
+        if let Some(key_value) = item.get(key).and_then(|v| v.as_str()) {
+            map.entry(key_value.to_string()).or_insert_with(Vec::new).push(item);
+        }
+    }
+
+    // Serialize the result back to JsValue
+    to_value(&map).unwrap_or_else(|_| JsValue::NULL)
+}
+
+#[wasm_bindgen]
+pub fn flatten_deep(vec: JsValue) -> JsValue {
+    let vec: Vec<Value> = from_value(vec).unwrap();
+    let flattened = flatten_deep_recursive(vec);
+    to_value(&flattened).unwrap()
+}
+
+fn flatten_deep_recursive(vec: Vec<Value>) -> Vec<Value> {
+    let mut result = Vec::new();
+    for item in vec {
+        if item.is_array() {
+            result.extend(flatten_deep_recursive(item.as_array().unwrap().clone()));
+        } else {
+            result.push(item);
+        }
+    }
+    result
+}
+
+#[wasm_bindgen]
+pub fn uniq(items: JsValue) -> JsValue {
+    let items: Vec<Value> = from_value(items).unwrap();
+    let mut seen = HashSet::new();
+    let mut result = Vec::new();
+    for item in items {
+        let serialized = serde_json::to_string(&item).unwrap();
+        if seen.insert(serialized) {
+            result.push(item);
+        }
+    }
+    to_value(&result).unwrap()
 }
