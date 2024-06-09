@@ -4,6 +4,8 @@ use serde_json::{self, Value};
 use serde_wasm_bindgen::{from_value, to_value};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
+use js_sys::Function;
 use console_error_panic_hook;
 use wasm_logger;
 
@@ -16,6 +18,17 @@ extern "C" {
 enum Iteratee {
     Path(Vec<String>),
     Property(String),
+}
+
+// Custom implementation to hash serde_json::Value as a string
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+struct HashableValue(Value);
+
+impl Hash for HashableValue {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let s = serde_json::to_string(&self.0).unwrap();
+        s.hash(state);
+    }
 }
 
 impl Iteratee {
@@ -98,7 +111,7 @@ type IterateeFn = Box<dyn Fn(&Value) -> Value>;
 #[derive(Clone, Debug)]
 struct CriteriaObject {
     criteria: Vec<Value>,
-    index: usize,
+    // index: usize,
     value: Value,
 }
 
@@ -164,7 +177,7 @@ pub fn order_by(
 
             result.push(CriteriaObject {
                 criteria,
-                index: criteria_index as usize,
+                // index: criteria_index as usize,
                 value: value.clone(),
             });
         });
@@ -223,32 +236,126 @@ pub fn group_by(items: JsValue, key: &str) -> JsValue {
 #[wasm_bindgen]
 pub fn flatten_deep(vec: JsValue) -> JsValue {
     let vec: Vec<Value> = from_value(vec).unwrap();
-    let flattened = flatten_deep_recursive(vec);
+    let flattened = flatten_deep_iterative(vec);
     to_value(&flattened).unwrap()
 }
 
-fn flatten_deep_recursive(vec: Vec<Value>) -> Vec<Value> {
+fn flatten_deep_iterative(vec: Vec<Value>) -> Vec<Value> {
     let mut result = Vec::new();
-    for item in vec {
-        if item.is_array() {
-            result.extend(flatten_deep_recursive(item.as_array().unwrap().clone()));
-        } else {
-            result.push(item);
+    let mut stack = vec![vec];
+
+    while let Some(current) = stack.pop() {
+        for item in current {
+            if item.is_array() {
+                stack.push(item.as_array().unwrap().clone());
+            } else {
+                result.push(item);
+            }
         }
     }
+
     result
 }
 
 #[wasm_bindgen]
-pub fn uniq(items: JsValue) -> JsValue {
-    let items: Vec<Value> = from_value(items).unwrap();
+pub fn uniq(array: JsValue) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
     let mut seen = HashSet::new();
+    let mut unique_array = Vec::new();
+
+    for item in array {
+        if seen.insert(serde_json::to_string(&item).unwrap()) {
+            unique_array.push(item);
+        }
+    }
+    to_value(&unique_array).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn chunk(array: JsValue, size: usize) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
+    let mut chunks = Vec::new();
+    for chunk in array.chunks(size) {
+        chunks.push(chunk.to_vec());
+    }
+    to_value(&chunks).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn difference(array: JsValue, values: JsValue) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
+    let values: HashSet<HashableValue> = from_value(values).unwrap();
+    let diff: Vec<Value> = array.into_iter()
+        .filter(|v| !values.contains(&HashableValue(v.clone())))
+        .collect();
+    to_value(&diff).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn flatten(array: JsValue) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
     let mut result = Vec::new();
-    for item in items {
-        let serialized = serde_json::to_string(&item).unwrap();
-        if seen.insert(serialized) {
+    for item in array {
+        if let Some(sub_array) = item.as_array() {
+            for sub_item in sub_array {
+                result.push(sub_item.clone());
+            }
+        } else {
             result.push(item);
         }
     }
     to_value(&result).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn sum(array: JsValue) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
+    let sum: f64 = array.iter().filter_map(|v| v.as_f64()).sum();
+    to_value(&sum).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn range(start: i32, end: i32, step: i32) -> JsValue {
+    let step = if step == 0 { 1 } else { step };
+    let range: Vec<Value> = (start..end).step_by(step as usize).map(Value::from).collect();
+    to_value(&range).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn fill(array: JsValue, value: JsValue, start: usize, end: usize) -> JsValue {
+    let mut array: Vec<Value> = from_value(array).unwrap();
+    let value: Value = from_value(value).unwrap();
+    let end = end.min(array.len());
+    for i in start..end {
+        array[i] = value.clone();
+    }
+    to_value(&array).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn reverse(array: JsValue) -> JsValue {
+    let mut array: Vec<Value> = from_value(array).unwrap();
+    array.reverse();
+    to_value(&array).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn filter(array: JsValue, predicate: &Function) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
+    let filtered: Vec<Value> = array.into_iter()
+        .filter(|item| predicate.call1(&JsValue::NULL, &to_value(item).unwrap()).unwrap().as_bool().unwrap())
+        .collect();
+    to_value(&filtered).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn reduce(array: JsValue, callback: &Function, initial: JsValue) -> JsValue {
+    let array: Vec<Value> = from_value(array).unwrap();
+    let mut accumulator = initial;
+
+    for item in array {
+        accumulator = callback.call2(&JsValue::NULL, &accumulator, &to_value(&item).unwrap()).unwrap();
+    }
+
+    accumulator
 }

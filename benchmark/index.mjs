@@ -41,7 +41,7 @@ const generateData = (size, mode) => {
         Array.from({ length: size }, (_, i) => ({ id: i, value: Math.random() })),
         Array.from({ length: size }, (_, i) => ({ id: i, otherValue: Math.random() }))
       ];
-      case 'groupBy':
+    case 'groupBy':
       return [
         Array.from({ length: size }, (_, i) => ({
           type: i % 2 === 0 ? 'even' : 'odd',
@@ -59,17 +59,71 @@ const generateData = (size, mode) => {
           timestamp: Date.now() + i
         })),
         'type'
-      ];    
+      ];
     case 'flattenDeep': {
       const nestedArray = (depth) => {
-        if (depth <= 0) return depth;
-        return [depth, nestedArray(depth - 1)];
+        let current = depth;
+        let result = current;
+        while (current > 0) {
+          result = [current, result];
+          current -= 1;
+        }
+        return result;
       };
       return [nestedArray(size)];
     }
     case 'uniq':
       return [
         Array.from({ length: size }, () => Math.floor(Math.random() * 10))
+      ];
+    case 'chunk':
+      return [
+        Array.from({ length: size }, (_, i) => i),
+        Math.ceil(size / 10)
+      ];
+    case 'difference':
+      return [
+        Array.from({ length: size }, (_, i) => i),
+        Array.from({ length: size / 2 }, (_, i) => i * 2)
+      ];
+    case 'flatten':
+      return [
+        Array.from({ length: size }, (_, i) => i % 2 === 0 ? [i, [i + 1]] : i)
+      ];
+    case 'sum':
+      return [
+        Array.from({ length: size }, () => Math.random() * 100)
+      ];
+    case 'range':
+      return [
+        0,
+        size,
+        Math.ceil(size / 10)
+      ];
+    case 'fill':
+      return [
+        Array.from({ length: size }, () => 0),
+        Math.random() * 100,
+        Math.floor(size / 4),
+        Math.floor(size / 2)
+      ];
+    case 'reverse':
+      return [
+        Array.from({ length: size }, (_, i) => i)
+      ];
+    case 'filter':
+      return [
+        Array.from({ length: size }, (_, i) => ({
+          value: i,
+          isValid: i % 2 === 0
+        })),
+        item => item.isValid
+      ];
+    case 'reduce':
+      return [
+        Array.from({ length: size }, (_, i) => i),
+        (acc, val) => acc + val,
+        0
       ];
     default:
       return null; // Invalid command
