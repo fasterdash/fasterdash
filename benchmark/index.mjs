@@ -5,264 +5,111 @@ import fasterdash from '../lib/index.js';
 import htmlToImage from 'node-html-to-image';
 import process from 'process';
 
-// Function that could be benchmarking and ordering results
-function benchmarkOrderBy(orderBy) {
-  console.log(`Benchmarking orderBy`);
+// Common data generation function
+const generateData = (size, mode) => {
+  switch(mode) {
+    case 'orderBy':
+      return [
+        Array.from({ length: size }, (_, i) => ({
+          id: i,
+          value: Math.random(),
+          value2: Math.random(),
+          value3: Math.random(),
+          value4: Math.random()
+        })),
+        ['value', 'value2', 'value3', 'value4'],
+        ['asc', 'desc', 'asc', 'desc']
+      ];
+    case 'compact':
+      return [
+        Array.from({ length: size }, (_, i) => (i % 10 === 0 ? 0 : i))
+      ];
+    default:
+      return null; // Invalid command
+  }
+};
+
+// Generic benchmark function to reduce code duplication
+// E.g. operation could be 'orderBy' or 'compact'
+function benchmarkOperation(operation) {
+  console.log(`Benchmarking ${operation}`);
 
   const suite = new Benchmark.Suite;
-
-  const imageOutputPath = './benchmark/results/orderBy.png'
-
-  // Example data generation function
-  const generateData = (size) => {
-    return Array.from({ length: size }, (_, i) => ({
-      id: i,
-      value: Math.random(),
-      value2: Math.random(),
-      value3: Math.random(),
-      value4: Math.random()
-    }));
-  };
-
-  // Array sizes to test
   const sizes = [1000, 10000, 100000];
   let results = [];
 
-  // Add benchmark tests for different array sizes
   sizes.forEach(size => {
-    const data = generateData(size);
-    suite.add(`Lodash orderBy ${size}`, () => {
-      _.orderBy(data, ['value', 'value2', 'value3', 'value4'], ['asc', 'desc', 'asc', 'desc']);
+    const [...args] = generateData(size, operation);
+    suite.add(`Lodash ${operation} ${size}`, () => {
+      _[operation](...args);
     });
-    suite.add(`Fasterdash orderBy ${size}`, () => {
-      fasterdash.orderBy(data, ['value', 'value2', 'value3', 'value4'], ['asc', 'desc', 'asc', 'desc']);
+    suite.add(`Fasterdash ${operation} ${size}`, () => {
+      fasterdash[operation](...args);
     });
   });
 
-  // Event listener for each benchmark cycle (iteration)
   suite.on('cycle', (event) => {
     console.log(String(event.target));
-    // Extract size directly from the name of the test
     const size = parseInt(event.target.name.split(' ')[2]);
-    // Calculate total time for the benchmark in seconds
     const totalTime = event.target.stats.mean * event.target.stats.sample.length;
-    // Push the benchmark result into the results array
-    results.push({
-      name: event.target.name, // Name of the test
-      totalTime: totalTime,    // Total time in seconds
-      size: size               // Size of the array used in the test
-    });
+    results.push({ name: event.target.name, totalTime, size });
     console.log(`Total execution time for ${size} elements: ${totalTime.toFixed(3)} seconds`);
   });
 
-  // Event listener for completion of all benchmarks
-  suite.on('complete', async function() {
+  suite.on('complete', async () => {
     console.log('All benchmarks completed.');
-    await generateGraph(results);
-    console.log(`Graph image has been saved to ${imageOutputPath}`);
+    await generateGraph(results, operation);
   });
 
-  // Run the benchmark suite asynchronously
   suite.run({ 'async': true });
-
-  // Function to generate a graph from the benchmark results and save it as a PNG image
-  async function generateGraph(data) {
-    // Separate data for lodash and fasterdash
-    const lodashData = data.filter(d => d.name.includes('Lodash'));
-    const fasterdashData = data.filter(d => d.name.includes('Fasterdash'));
-
-    // Create traces for Plotly
-    const lodashTrace = {
-      x: lodashData.map(d => d.size), // Array sizes
-      y: lodashData.map(d => d.totalTime), // Total time for each array size
-      type: 'scatter',
-      mode: 'lines+markers',    // Line graph with markers at each data point
-      name: 'Lodash orderBy',   // Legend name
-      marker: { color: 'blue' },
-      text: lodashData.map(d => d.name), // Add test names as hover text
-      hoverinfo: 'x+y+text'    // Show size, total time, and test name on hover
-    };
-
-    const fasterdashTrace = {
-      x: fasterdashData.map(d => d.size),
-      y: fasterdashData.map(d => d.totalTime),
-      type: 'scatter',
-      mode: 'lines+markers',
-      name: 'Fasterdash orderBy',
-      marker: { color: 'red' },
-      text: fasterdashData.map(d => d.name),
-      hoverinfo: 'x+y+text'
-    };
-
-    // Layout for the Plotly graph
-    const layout = {
-      title: 'Total Time of lodash orderBy vs fasterdash orderBy across different array sizes',
-      xaxis: {
-        title: 'Array Size',
-        type: 'linear', // Linear scale for the x-axis
-        tickvals: lodashData.map(d => d.size), // Explicit tick values for each array size
-        ticktext: lodashData.map(d => `${d.size}`) // Text labels for the tick values
-      },
-      yaxis: {
-        title: 'Total Time (seconds)',
-        autorange: true
-      },
-      width: 800, // Width of the graph
-      height: 600 // Height of the graph
-    };
-
-    // HTML string to create the Plotly graph
-    const html = `<html><head><script src="https://cdn.plot.ly/plotly-latest.min.js"></script></head>
-                  <body><div id="myDiv" style="width: 800px; height: 600px;"></div>
-                  <script>
-                    var graphDiv = document.getElementById('myDiv');
-                    Plotly.newPlot(graphDiv, [${JSON.stringify(lodashTrace)}, ${JSON.stringify(fasterdashTrace)}], ${JSON.stringify(layout)});
-                  </script></body></html>`;
-
-    // Convert the HTML to an image using node-html-to-image and save it
-    await htmlToImage({
-      output: imageOutputPath,
-      html: html,
-      puppeteerArgs: { args: ['--no-sandbox'] },
-    });
-  }
 }
 
-function benchmarkCompact() {
-  console.log(`Benchmarking compact`);
+// Function to generate and save a graph
+async function generateGraph(data, operation) {
+  const traceData = data.reduce((acc, d) => {
+    const key = d.name.includes('Lodash') ? 'Lodash' : 'Fasterdash';
+    acc[key].push({ size: d.size, totalTime: d.totalTime, name: d.name });
+    return acc;
+  }, { 'Lodash': [], 'Fasterdash': [] });
 
-  const suite = new Benchmark.Suite;
+  const traces = Object.entries(traceData).map(([lib, values]) => ({
+    x: values.map(v => v.size),
+    y: values.map(v => v.totalTime),
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: `${lib} ${operation}`,
+    marker: { color: lib === 'Lodash' ? 'blue' : 'red' },
+    text: values.map(v => v.name),
+    hoverinfo: 'x+y+text'
+  }));
 
-  const imageOutputPath = './benchmark/results/compact.png'
-
-  // Example data generation function
-  const generateData = (size) => {
-    let largeArray = [];
-    for (let i = 0; i < size; i++) {
-      largeArray.push(i % 10 === 0 ? 0 : i);
-    }
-    return largeArray;
+  const layout = {
+    title: `Total Time of Lodash vs Fasterdash ${operation} across different array sizes`,
+    xaxis: { title: 'Array Size', type: 'linear' },
+    yaxis: { title: 'Total Time (seconds)', autorange: true },
+    width: 800,
+    height: 600
   };
 
-  // Array sizes to test
-  const sizes = [1000, 10000, 100000];
-  let results = [];
-
-  // Add benchmark tests for different array sizes
-  sizes.forEach(size => {
-    const data = generateData(size);
-    suite.add(`Lodash compact ${size}`, () => {
-      _.compact(data);
-    });
-    suite.add(`Fasterdash compact ${size}`, () => {
-      fasterdash.compact(data);
-    });
-  });
-
-  // Event listener for each benchmark cycle (iteration)
-  suite.on('cycle', (event) => {
-    console.log(String(event.target));
-    // Extract size directly from the name of the test
-    const size = parseInt(event.target.name.split(' ')[2]);
-    // Calculate total time for the benchmark in seconds
-    const totalTime = event.target.stats.mean * event.target.stats.sample.length;
-    // Push the benchmark result into the results array
-    results.push({
-      name: event.target.name, // Name of the test
-      totalTime: totalTime,    // Total time in seconds
-      size: size               // Size of the array used in the test
-    });
-    console.log(`Total execution time for ${size} elements: ${totalTime.toFixed(3)} seconds`);
-  });
-
-  // Event listener for completion of all benchmarks
-  suite.on('complete', async function() {
-    console.log('All benchmarks completed.');
-    await generateGraph(results);
-    console.log(`Graph image has been saved to ${imageOutputPath}`);
-  });
-
-  // Run the benchmark suite asynchronously
-  suite.run({ 'async': true });
-
-  // Function to generate a graph from the benchmark results and save it as a PNG image
-  async function generateGraph(data) {
-    // Separate data for lodash and fasterdash
-    const lodashData = data.filter(d => d.name.includes('Lodash'));
-    const fasterdashData = data.filter(d => d.name.includes('Fasterdash'));
-
-    // Create traces for Plotly
-    const lodashTrace = {
-      x: lodashData.map(d => d.size), // Array sizes
-      y: lodashData.map(d => d.totalTime), // Total time for each array size
-      type: 'scatter',
-      mode: 'lines+markers',    // Line graph with markers at each data point
-      name: 'Lodash compact',   // Legend name
-      marker: { color: 'blue' },
-      text: lodashData.map(d => d.name), // Add test names as hover text
-      hoverinfo: 'x+y+text'    // Show size, total time, and test name on hover
-    };
-
-    const fasterdashTrace = {
-      x: fasterdashData.map(d => d.size),
-      y: fasterdashData.map(d => d.totalTime),
-      type: 'scatter',
-      mode: 'lines+markers',
-      name: 'Fasterdash compact',
-      marker: { color: 'red' },
-      text: fasterdashData.map(d => d.name),
-      hoverinfo: 'x+y+text'
-    };
-
-    // Layout for the Plotly graph
-    const layout = {
-      title: 'Total Time of lodash compact vs fasterdash compact across different array sizes',
-      xaxis: {
-        title: 'Array Size',
-        type: 'linear', // Linear scale for the x-axis
-        tickvals: lodashData.map(d => d.size), // Explicit tick values for each array size
-        ticktext: lodashData.map(d => `${d.size}`) // Text labels for the tick values
-      },
-      yaxis: {
-        title: 'Total Time (seconds)',
-        autorange: true
-      },
-      width: 800, // Width of the graph
-      height: 600 // Height of the graph
-    };
-
-    // HTML string to create the Plotly graph
-    const html = `<html><head><script src="https://cdn.plot.ly/plotly-latest.min.js"></script></head>
+  const html = `<html><head><script src="https://cdn.plot.ly/plotly-latest.min.js"></script></head>
                   <body><div id="myDiv" style="width: 800px; height: 600px;"></div>
                   <script>
                     var graphDiv = document.getElementById('myDiv');
-                    Plotly.newPlot(graphDiv, [${JSON.stringify(lodashTrace)}, ${JSON.stringify(fasterdashTrace)}], ${JSON.stringify(layout)});
+                    Plotly.newPlot(graphDiv, ${JSON.stringify(traces)}, ${JSON.stringify(layout)});
                   </script></body></html>`;
 
-    // Convert the HTML to an image using node-html-to-image and save it
-    await htmlToImage({
-      output: imageOutputPath,
-      html: html,
-      puppeteerArgs: { args: ['--no-sandbox'] },
-    });
-  }
+  await htmlToImage({
+    output: `./benchmark/results/${operation}.png`,
+    html: html,
+    puppeteerArgs: { args: ['--no-sandbox'] },
+  });
 }
 
-// Main function to handle command line arguments and call appropriate function
+// Entry point function using command line arguments
+// E.g. args[0] could be 'orderBy' or 'compact'
 function main() {
-  const args = process.argv.slice(2); // Removes 'node' and 'index.mjs' from arguments
-
-  switch (args[0]) {
-      case 'orderBy':
-          benchmarkOrderBy();
-          break;
-      case 'compact':
-          benchmarkCompact();
-          break;
-      default:
-          console.log('Invalid command');
-          break;
-  }
+  const args = process.argv.slice(2);
+  benchmarkOperation(args[0]);
 }
 
 main();
