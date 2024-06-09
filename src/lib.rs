@@ -177,3 +177,8 @@ pub fn order_by(
 
     to_value(&sorted_result.into_iter().map(|object| object.value).collect::<Vec<_>>()).unwrap()
 }
+
+#[wasm_bindgen]
+pub fn compact(arr: Vec<i32>) -> Vec<i32> {
+    arr.into_iter().collect()
+}
