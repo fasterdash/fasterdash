@@ -109,6 +109,7 @@ fn identity(value: &Value) -> Value {
     value.clone()
 }
 
+#[wasm_bindgen]
 pub fn initialize() {
     console_error_panic_hook::set_once();
     wasm_logger::init(wasm_logger::Config::default());
@@ -122,7 +123,7 @@ pub fn order_by(
 ) -> JsValue {
     let collection: Value = from_value(collection.clone()).unwrap_or_else(|_| Value::Null);
     let iteratees: Vec<String> = from_value(iteratees.clone()).unwrap_or_else(|_| vec![]);
-    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string();
+    let orders: Vec<String> = from_value(orders.clone()).unwrap_or_else(|_| vec!["asc".to_string(); iteratees.len()]).into_iter().map(String::from).collect();
 
     // info!("Collection: {:?}", collection);
     // info!("Raw Iteratees: {:?}", iteratees);
