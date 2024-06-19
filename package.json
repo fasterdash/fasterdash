@@ -15,8 +15,16 @@
     "wasm",
     "webassembly"
   ],
-  "contributors": [],
-  "author": "Michael Trevino and Ross Miller",
+  "contributors": [
+    {
+      "name": "Michael Trevino",
+      "url": "https://github.com/mtrevin93"
+    },
+    {
+      "name": "Ross Miller",
+      "url": "https://github.com/rsml"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/fasterdash/fasterdash/issues"
