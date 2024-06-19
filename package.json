@@ -1,6 +1,6 @@
 {
   "name": "fasterdash",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Lodash replacement for large data sets. Implemted in Rust",
   "type": "module",
   "main": "index.js",
