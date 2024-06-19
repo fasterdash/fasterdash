@@ -47,12 +47,19 @@ module.exports = {
         // Have this example work in Edge which doesn't ship `TextEncoder` or
         // `TextDecoder` at this time.
         new webpack.ProvidePlugin({
-          TextDecoder: ['text-encoding', 'TextDecoder'],
-          TextEncoder: ['text-encoding', 'TextEncoder']
+            TextDecoder: ['text-encoding', 'TextDecoder'],
+            TextEncoder: ['text-encoding', 'TextEncoder']
         })
     ],
     mode: 'development',
     experiments: {
         asyncWebAssembly: true
-   }
+    },
+    resolve: {
+        fallback: {
+            "util": require.resolve("util/"),
+            "path": require.resolve("path-browserify"),
+            "fs": false  // or another appropriate setting based on your use case
+        }
+    }
 };

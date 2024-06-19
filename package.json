@@ -11,11 +11,11 @@
   "keywords": [
     "Lodash",
     "Rust",
-    "OrderBy"
+    "compact",
+    "wasm",
+    "webassembly"
   ],
-  "contributors": [
-
-  ],
+  "contributors": [],
   "author": "Michael Trevino and Ross Miller",
   "license": "MIT",
   "bugs": {
@@ -28,23 +28,8 @@
     "clean": "rimraf target pkg",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "//": "********* BENCHMARKS *********",
-    "benchmark:some": "npm run benchmark:uniq && npm run benchmark:chunk && npm run benchmark:difference && npm run benchmark:flatten && npm run benchmark:sum && npm run benchmark:range && npm run benchmark:fill && npm run benchmark:reverse && npm run benchmark:filter && npm run benchmark:reduce",
-    "benchmark:all": "npm run benchmark:orderBy && npm run benchmark:compact && npm run benchmark:cloneDeep && npm run benchmark:groupBy && npm run benchmark:flattenDeep && npm run benchmark:uniq && npm run benchmark:chunk && npm run benchmark:difference && npm run benchmark:flatten && npm run benchmark:sum && npm run benchmark:range && npm run benchmark:fill && npm run benchmark:reverse && npm run benchmark:filter && npm run benchmark:reduce",
-    "benchmark:orderBy": "node --experimental-modules ./benchmark/index.mjs orderBy",
     "benchmark:compact": "node --experimental-modules ./benchmark/index.mjs compact",
-    "benchmark:cloneDeep": "node --experimental-modules ./benchmark/index.mjs cloneDeep",
-    "benchmark:groupBy": "node --experimental-modules ./benchmark/index.mjs groupBy",
-    "benchmark:flattenDeep": "node --experimental-modules ./benchmark/index.mjs flattenDeep",
-    "benchmark:uniq": "node --experimental-modules ./benchmark/index.mjs uniq",
-    "benchmark:chunk": "node --experimental-modules ./benchmark/index.mjs chunk",
-    "benchmark:difference": "node --experimental-modules ./benchmark/index.mjs difference",
-    "benchmark:flatten": "node --experimental-modules ./benchmark/index.mjs flatten",
-    "benchmark:sum": "node --experimental-modules ./benchmark/index.mjs sum",
-    "benchmark:range": "node --experimental-modules ./benchmark/index.mjs range",
-    "benchmark:fill": "node --experimental-modules ./benchmark/index.mjs fill",
-    "benchmark:reverse": "node --experimental-modules ./benchmark/index.mjs reverse",
-    "benchmark:filter": "node --experimental-modules ./benchmark/index.mjs filter",
-    "benchmark:reduce": "node --experimental-modules ./benchmark/index.mjs reduce"
+    "benchmark:compact:debug": "node --inspect-brk --experimental-modules ./benchmark/index.mjs compact"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.5.0",
@@ -54,9 +39,11 @@
     "lodash": "^4.17.21",
     "mocha": "^10.4.0",
     "node-html-to-image": "^4.0.0",
+    "path-browserify": "^1.0.1",
     "plotly.js-dist-min": "^2.33.0",
     "rimraf": "^5.0.7",
     "text-encoding": "^0.7.0",
+    "util": "^0.12.5",
     "webpack": "^5.49.0",
     "webpack-cli": "^4.7.2",
     "webpack-dev-server": "^4.15.1"
