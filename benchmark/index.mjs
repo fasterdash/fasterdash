@@ -39,7 +39,6 @@ function benchmarkOperation(operation) {
     suite.add(`Fasterdash ${operation} ${size}`, {
       defer: true,
       fn: async (deferred) => {
-        debugger;
         await fasterdash[operation](...args);
         deferred.resolve();
       }
@@ -55,8 +54,17 @@ function benchmarkOperation(operation) {
 
     suite.on('complete', async () => {
       console.log(`All '${operation}' benchmarks completed.`);
-      console.log(`Results: ${JSON.stringify(results, null, 2)}`)
-      await generateGraph(results, operation);
+      const sortedResults = results.sort((a, b) => {
+        if(a.name.includes('Fasterdash') && !b.name.includes('Fasterdash')) {
+          return -1;
+        } else if(!a.name.includes('Fasterdash') && b.name.includes('Fasterdash')) {
+          return 1;
+        } else {
+          return a.size - b.size
+        }
+      });
+      console.log(`Results: ${JSON.stringify(sortedResults, null, 2)}`)
+      await generateGraph(sortedResults, operation);
     });
 
     suite.run({ 'async': true });
