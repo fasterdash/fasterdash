@@ -1,5 +1,4 @@
 import Benchmark from 'benchmark';
-import fs from 'fs';
 import _ from 'lodash';
 import fasterdash from '../index.js';
 import htmlToImage from 'node-html-to-image';
@@ -10,6 +9,10 @@ const generateData = (size, mode) => {
     case 'compact':
       return [
         Array.from({ length: size }, (_, i) => (i % 10 === 0 ? 0 : i))
+      ];
+    case 'sort':
+      return [
+        Array.from({ length: size }, () => Math.floor(Math.random() * 10))
       ];
     default:
       return null; // Invalid command
@@ -27,22 +30,34 @@ function benchmarkOperation(operation) {
     const suite = new Benchmark.Suite;
     const [...args] = generateData(size, operation);
 
-    // console.log(`Generated data for size ${size}:`, args);
-
-    suite.add(`Lodash ${operation} ${size}`, {
-      defer: true,
-      fn: async (deferred) => {
-        await _[operation](...args);
-        deferred.resolve();
-      }
-    });
-    suite.add(`Fasterdash ${operation} ${size}`, {
-      defer: true,
-      fn: async (deferred) => {
-        await fasterdash[operation](...args);
-        deferred.resolve();
-      }
-    });
+    if (operation === 'sort') {
+      suite.add(`JavaScript ${operation} ${size}`, () => {
+        args[0].slice().sort((a, b) => a - b);
+      });
+      suite.add(`Fasterdash ${operation} ${size}`, {
+        defer: true,
+        fn: async (deferred) => {
+          const sortedData = new Int32Array(args[0]);
+          fasterdash.sort(sortedData);
+          deferred.resolve();
+        }
+      });
+    } else {
+      suite.add(`Lodash ${operation} ${size}`, {
+        defer: true,
+        fn: async (deferred) => {
+          await _[operation](...args);
+          deferred.resolve();
+        }
+      });
+      suite.add(`Fasterdash ${operation} ${size}`, {
+        defer: true,
+        fn: async (deferred) => {
+          await fasterdash[operation](...args);
+          deferred.resolve();
+        }
+      });
+    }
 
     suite.on('cycle', (event) => {
       console.log(String(event.target));
@@ -74,15 +89,22 @@ function benchmarkOperation(operation) {
 // Function to generate and save a graph
 async function generateGraph(data, operation) {
   const traceData = data.reduce((acc, d) => {
-    const key = d.name.includes('Lodash') ? 'Lodash' : 'Fasterdash';
+    const key = d.name.includes('JavaScript') ? 'JavaScript' : (d.name.includes('Lodash') ? 'Lodash' : 'Fasterdash');
     acc[key].push({ size: d.size, totalTime: d.totalTime, name: d.name });
     return acc;
-  }, { 'Lodash': [], 'Fasterdash': [] });
-
-
+  }, { 'JavaScript': [], 'Lodash': [], 'Fasterdash': [] });
 
   const traces = Object.entries(traceData).map(([lib, values]) => {
     const sortedValues = values.sort((a, b) => a.size - b.size);
+
+    let color;
+    if (lib === 'JavaScript') {
+      color = 'blue';
+    } else if (lib === 'Lodash') {
+      color = 'green';
+    } else {
+      color = 'red';
+    }
 
     return {
       x: values.map(v => v.size),
@@ -90,7 +112,7 @@ async function generateGraph(data, operation) {
       type: 'scatter',
       mode: 'lines+markers',
       name: `${lib} ${operation}`,
-      marker: { color: lib === 'Lodash' ? 'blue' : 'red' },
+      marker: { color },
       text: values.map(v => v.name),
       hoverinfo: 'x+y+text'
     }

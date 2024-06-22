@@ -38,7 +38,8 @@
     "prepare": "npm run clean && npm run build",
     "//": "********* BENCHMARKS *********",
     "benchmark:compact": "node --experimental-modules ./benchmark/index.mjs compact",
-    "benchmark:compact:debug": "node --inspect-brk --experimental-modules ./benchmark/index.mjs compact"
+    "benchmark:compact:debug": "node --inspect-brk --experimental-modules ./benchmark/index.mjs compact",
+    "benchmark:sort": "node --experimental-modules ./benchmark/index.mjs sort"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "1.5.0",
