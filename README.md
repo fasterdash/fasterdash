@@ -1,6 +1,10 @@
 # Fasterdash
 
-Fasterdash is a drop in replacement for Lodash using Rust and WebAssembly. Currently the only function that is supported is `compact`.
+Fasterdash speeds up certain lodash functions dramatically when using integers (32 bit). The speed improvement comes from using Rust compiled into WebAssemby.
+
+ Currently the only function that is supported is:
+
+* `compact`
 
 ## Functions Implemented and Benchmark Results
 
@@ -13,7 +17,7 @@ Fasterdash is a drop in replacement for Lodash using Rust and WebAssembly. Curre
 
 ### Functions that we have decided not to include in this repo
 
-If you look at commit `4ccfd38f5df26b0a20c03e7e40ed127c5efcbb24` you can see these additional functions implemented:
+If you look at commit `4ccfd38f5df26b0a20c03e7e40ed127c5efcbb24` you can see these additional functions used to be implemented:
 
 ```text
 chunk
@@ -33,6 +37,12 @@ sum
 uniq
 ```
 
-However they were all removed from this codebase because they were benchmarked and were slower than the pure JS implementation that lodash provides.
+However they were all removed from this library because they were benchmarked and were slower than the pure JS implementation that lodash provides.
 
-Future work on this repo should explore testing other lodash functions or testing these functions in unique scenarios where they might run faster and be more memory efficient that the JS implementations.
+## Future Improvements
+
+* Explore using generics or more permissive data types in Rust to make this package more versitile
+* Test other lodash functions to optimize. There will be unique scenarios where they might run faster and be more memory efficient that the JS implementations since lodash is specifically optimized for common use cases at the expense of rare use cases. Rust especially excells at memory management compared to javascript, so functions that require a lot of new array instantiation are good targets to optimize.
+* Experiment with parallelizing some operations and run them on the GPU
+* Experiment with calling different functions depending on the size of the dataset. For instance for very small datasets it is likely faster to use lodash. So, for instance, this package could dynamically decide whether to use lodash or to use fasterdash implementation depending on the size of the array being passed in
+* Explore if any of the functions that we decided not to include could be futher optimized in order to be faster than lodash
