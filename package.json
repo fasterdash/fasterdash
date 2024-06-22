@@ -35,6 +35,7 @@
     "serve": "open http://localhost:8080/; webpack serve",
     "clean": "rimraf target pkg",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "prepare": "npm run clean && npm run build",
     "//": "********* BENCHMARKS *********",
     "benchmark:compact": "node --experimental-modules ./benchmark/index.mjs compact",
     "benchmark:compact:debug": "node --inspect-brk --experimental-modules ./benchmark/index.mjs compact"
