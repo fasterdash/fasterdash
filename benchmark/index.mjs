@@ -17,7 +17,7 @@ const generateData = (size, mode) => {
 
 // Generic benchmark function to reduce code duplication
 function benchmarkOperation(operation) {
-  console.log(`Benchmarking ${operation}`);
+  console.log(`Benchmarking ${operation}...`);
 
   const sizes = [1000, 10000, 100000];
   let results = [];
