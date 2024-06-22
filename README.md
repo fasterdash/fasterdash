@@ -1,6 +1,6 @@
 # Fasterdash
 
-Fasterdash is a drop in replacement for Lodash using Rust and WebAssembly
+Fasterdash is a drop in replacement for Lodash using Rust and WebAssembly. Currently the only function that is supported is `compact`.
 
 ## Functions Implemented and Benchmark Results
 
@@ -8,50 +8,6 @@ Fasterdash is a drop in replacement for Lodash using Rust and WebAssembly
 
 * compact
 ![compact Benchmark Results](./benchmark/results/compact.png)
-
-## Prerequisites
-
-Install Rust: [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
-
-## Installation
-
-```bash
-npm install
-```
-
-## How to Use
-
-### Build
-
-```bash
-npm run serve
-```
-
-### Serve
-
-```bash
-npm run serve
-# Automatically opens http://localhost:8080. You may need to reload the browser after rust finishes building
-```
-
-### Clean
-
-```bash
-npm run clean
-```
-
-### Test
-
-```bash
-npm run test
-```
-
-### Benchmark
-
-```bash
-npm run benchmark:compact
-# Files will be created at ./benchmark/results/compact.png
-```
 
 ---
 

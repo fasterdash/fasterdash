@@ -1,7 +1,7 @@
 import Benchmark from 'benchmark';
 import fs from 'fs';
 import _ from 'lodash';
-import fasterdash from '../lib/index.js';
+import fasterdash from '../index.js';
 import htmlToImage from 'node-html-to-image';
 import process from 'process';
 
