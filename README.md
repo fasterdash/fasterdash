@@ -2,16 +2,30 @@
 
 Fasterdash speeds up certain lodash functions dramatically when using integers (32 bit). The speed improvement comes from using Rust compiled into WebAssemby.
 
+NOTE: Currently the WebAssembly code always returns arrays as Int32Array's (see example in "How to use" section). So it is only recommended to use this package when dealing with numbers or where you do no care about it being converted to Int32Array. You can convert it back yourself but that comes with a performance cost so we decided not to automatically convert back.
+
  Currently the only function that is supported is:
 
 * `compact`
-
-## Functions Implemented and Benchmark Results
 
 ## Benchmark Results
 
 * compact
 ![compact Benchmark Results](./benchmark/results/compact.png)
+
+---
+
+## How to use
+
+```javascript
+import fasterdash from 'fasterdash'
+
+const compactResult = fasterdash.compact([1, false, 0, 3, 4, false])
+
+console.log({compactResult})
+
+// => { compactResult: Int32Array(3) [ 1, 3, 4 ] }
+```
 
 ---
 
