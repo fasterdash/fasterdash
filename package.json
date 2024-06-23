@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Lodash replacement for large data sets. Implemted in Rust",
   "type": "module",
-  "main": "lib/index.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fasterdash/fasterdash.git"
