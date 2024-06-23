@@ -2,9 +2,10 @@
 
 Fasterdash speeds up certain lodash functions dramatically when using integers (32 bit). The speed improvement comes from using Rust compiled into WebAssemby.
 
- Currently the only function that is supported is:
+ Currently the only functions that are supported are:
 
 * `compact`
+* `sort`
 
 ## Functions Implemented and Benchmark Results
 
@@ -12,6 +13,9 @@ Fasterdash speeds up certain lodash functions dramatically when using integers (
 
 * compact
 ![compact Benchmark Results](./benchmark/results/compact.png)
+
+* sort
+![sort Benchmark Results](./benchmark/results/sort.png)
 
 ---
 
