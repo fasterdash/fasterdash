@@ -42,6 +42,7 @@
     "benchmark:sort": "node --experimental-modules ./benchmark/index.mjs sort"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.24.7",
     "@wasm-tool/wasm-pack-plugin": "1.5.0",
     "benchmark": "^2.1.4",
     "html-webpack-plugin": "^5.3.2",
@@ -49,16 +50,13 @@
     "mocha": "^10.4.0",
     "node-html-to-image": "^4.0.0",
     "path-browserify": "^1.0.1",
+    "plotly.js-basic-dist": "^2.33.0",
     "plotly.js-dist-min": "^2.33.0",
     "rimraf": "^5.0.7",
     "text-encoding": "^0.7.0",
     "util": "^0.12.5",
-    "webpack": "^5.49.0",
     "webpack-cli": "^4.7.2",
-    "webpack-dev-server": "^4.15.1"
-  },
-  "dependencies": {
-    "@babel/preset-env": "^7.24.7",
-    "plotly.js-basic-dist": "^2.33.0"
+    "webpack-dev-server": "^4.15.1",
+    "webpack": "^5.49.0"
   }
 }
